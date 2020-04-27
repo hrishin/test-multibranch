@@ -3,7 +3,8 @@ pipeline {
     stages {
         stage('build') {
             steps {
-	        sh 'pwd'
+	        sh 'printenv'
+		sh 'pwd'
                 sh 'ls'
             }
         }
