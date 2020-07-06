@@ -10,11 +10,17 @@ String lattestJenkinsVersion() {
 String currentJenkinsVersion() {
     try {
        return sh(script: 'grep -i "jenkins/jenkins" Dockerfile | cut -d ":" -f2 | grep -o "[0-9.]*"', returnStdout: true)
-        //return readFile(file: "version4.txt")
     } catch(e) {
-         println "exception"
          return ""
     }
+}
+
+String getLastjenkinsCheck() {
+   try {
+      return readFile(file: "jenkins.txt")
+   } catch(e) {
+      return ""
+   }
 }
 
 pipeline {
@@ -25,12 +31,15 @@ pipeline {
                script {
                    def current = currentJenkinsVersion()
                    def latest  = lattestJenkinsVersion()
-                   echo "c: "+ current + ", v: " + latest
-                   if(current && current >= latest) {
+                   def lastcheck = getLastjenkinsCheck()
+                   
+                   echo "current: "+ current + "\nlast: "+ lastCheck + "\nlatest: " + latest
+
+                   if((current && current >= latest) && (lastCheck && current >= lastcheck)) {
                        echo "no update"
                        return
                    }
-                   writeFile(file: "version4.txt", text: latest)
+                   writeFile(file: "jenkins.txt", text: latest)
                    input message: "Woulkd you like to upgrde jenkins version?"
                }
            }
