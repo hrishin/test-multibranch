@@ -66,7 +66,7 @@ def checkPluginUpdates(jenkinsVersion) {
       """
     }
     def updatePlugins = updates.length > 0 ? true:false
-    def releaseNote = updates.length > 0 "Plugins updates are available:\n" + updates.join("\n") : null
+    def releaseNote = updates.length > 0 ? "Plugins updates are available:\n" + updates.join("\n") : null
     return [updatePlugins, releaseNote]
 }
 
