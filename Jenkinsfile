@@ -35,11 +35,11 @@ pipeline {
                   (latestJenkins, link, description) = lattestJenkinsVersion()
                   lastCheck = getLastjenkinsCheck()
                    
-                  println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latest)
-                  if((current && current >= latest) && (lastCheck && current >= lastCheck)) {
+                  println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latestJenkins)
+                  if((current && current >= latestJenkins) && (lastCheck && current >= lastCheck)) {
                      updateJenkins = false
                   }
-                  writeFile(file: "jenkins.txt", text: latest)
+                  writeFile(file: "jenkins.txt", text: latestJenkins)
 
                   if(updateJenkins) {
                      input message: "Woulkd you like to upgrde jenkins version?"
