@@ -24,31 +24,50 @@ String getLastjenkinsCheck() {
    }
 }
 
+String jenkinsUpdateMessage(link, description) {
+   return sprintf("```%s```%s", description, link)
+} 
+
+def checkJenkinsUpdate() {
+   // check jenkins update
+   def updateJenkins = false
+   def current = currentJenkinsVersion()
+   (latestJenkins, link, description) = lattestJenkinsVersion()
+   def lastCheck = getLastjenkinsCheck()
+      
+   println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latestJenkins)
+   if((current && current >= latestJenkins) || (lastCheck && lastCheck >= latestJenkins)) {
+      return [updateJenkins, null]
+   }
+   writeFile(file: "jenkins.txt", text: latestJenkins)
+   sh """
+   sed -i.bak "s/FROM jenkins\\/jenkins.*/FROM jenkins\\/jenkins:${latestJenkins}-lts-alpine/g\" Dockerfile
+   """
+   updateJenkins = true
+   return [updateJenkins, jenkinsUpdateMessage(link, description)]
+}
+
 pipeline {
    agent any
    stages {
        stage('Check updates') {
            steps {
                script {
-                  updateJenkins = true
-                  current = currentJenkinsVersion()
-                  (latestJenkins, link, description) = lattestJenkinsVersion()
-                  lastCheck = getLastjenkinsCheck()
-                   
-                  println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latestJenkins)
-                  if((current && current >= latestJenkins) || (lastCheck && lastCheck >= latestJenkins)) {
-                     updateJenkins = false
-                  }
-                  writeFile(file: "jenkins.txt", text: latestJenkins)
-
-                  if(!updateJenkins) {
-                     echo "Jenkins is up to date"
-                     currentBuild.result = 'SUCCESS'
-                     return
-                  }
-                  input message: "Woulkd you like to upgrde jenkins version?"
+                  // check jenkins update
+                  (updateJenkins, jenkinsReleaseNote) = checkJenkinsUpdate()
                }
            }
+       }
+
+       stage('Wait for approval') {
+          when {
+             expression {
+                updateJenkins
+             }
+          }
+          steps {
+             input message: "Woulkd you like to upgrde jenkins version?"
+          }
        }
 
        stage('Update jenkins master') {
@@ -59,9 +78,6 @@ pipeline {
           }
           steps {
             echo "Updating Jenkins to ${latestJenkins}"
-            sh """
-            sed -i.bak "s/FROM jenkins\\/jenkins.*/FROM jenkins\\/jenkins:${latestJenkins}-lts-alpine/g\" Dockerfile
-            """
           }
        }
    }
