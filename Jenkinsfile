@@ -29,9 +29,9 @@ pipeline {
                script {
                   def current = currentJenkinsVersion()
                   def latest  = lattestJenkinsVersion()
-                  def lastcheck = getLastjenkinsCheck()
+                  def lastCheck = getLastjenkinsCheck()
                    
-                  println sprintf("current: %s \n last: %s \n latest: %s\n", current, lastcheck, latest)
+                  println sprintf("current: %s \n last: %s \n latest: %s\n", current, lastCheck, latest)
                   if((current && current >= latest) && (lastCheck && current >= lastcheck)) {
                       echo "no update"
                       return
