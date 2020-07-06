@@ -25,7 +25,7 @@ pipeline {
                script {
                    def current = currentJenkinsVersion()
                    def latest  = lattestJenkinsVersion()
-                   echo "c"+ current + " v" + version
+                   echo "c: "+ current + ", v: " + latest
                    if(current && current >= version) {
                        echo "no update"
                        return
