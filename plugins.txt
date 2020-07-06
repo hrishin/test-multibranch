@@ -9,7 +9,7 @@ envinject:2.3.0
 extended-choice-parameter:0.78
 github-pullrequest:0.2.8
 github:1.30.0
-google-compute-engine:4.3.0
+google-compute-engine:4.2.0
 gradle:1.34
 greenballs:1.15
 junit:1.29

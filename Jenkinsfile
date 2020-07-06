@@ -52,11 +52,22 @@ def checkPluginUpdates(jenkinsVersion) {
     jenkinsVersion = jenkinsVersion.tokenize('.').dropRight(1).join('.')
     def pluginUpdates = new URL("https://updates.jenkins.io/${jenkinsVersion}/update-center.actual.json").getText()
     def pluginsMeta = readJSON text: pluginUpdates
-    
+    def updates = []
+
     readFile('plugins.txt').split('\n').eachWithIndex { plugin, index ->
-        println plugin
+      (plugin, currentVersion) = pluginInfo.split(':')
+      def latestVersion = pluginsMeta['plugins'][plugin]['version']
+      if(!latestVersion || currentVersion >= latestVersion) {
+         continue
+      }
+      updates << sprintf("Updating plugin %s from %s to %s version", plugin, currentVersion, latestVersion)
+      sh """
+      sed -i.bak "s/${pluginInfo}/${plugin}:${latestVersion}/g\" plugins.txt
+      """
     }
-    return [null, null]
+    def updatePlugins = updates.length > 0 ? true:false
+    def releaseNote = updates.length > 0 "Plugins updates are available:\n" + updates.join("\n") : null
+    return [updatePlugins, releaseNote]
 }
 
 pipeline {
@@ -69,29 +80,28 @@ pipeline {
                   (updateJenkins, jenkinsVersion, jenkinsReleaseNote) = checkJenkinsUpdate()
                   // check plugin update
                   (updatePlugins, pluginsReleaseNote) = checkPluginUpdates(jenkinsVersion)
+                  println pluginsReleaseNote
                }
            }
        }
 
-       stage('Wait for approval') {
+       stage('Waiting for the confirmation') {
           when {
-             expression {
-                updateJenkins
-             }
+             expression { return updateJenkins || updatePlugins}
           }
           steps {
-             input message: "Woulkd you like to upgrde jenkins version?"
+             input message: "Would you like to upgrde Jenkins master?"
           }
        }
 
        stage('Update jenkins master') {
           when {
              expression {
-                updateJenkins
+                expression { return updateJenkins || updatePlugins}
              }
           }
           steps {
-            echo "Updating Jenkins to ${latestJenkins}"
+            echo "Updating Jenkins master to ${latestJenkins}"
           }
        }
    }
