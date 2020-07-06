@@ -36,22 +36,32 @@ pipeline {
                   lastCheck = getLastjenkinsCheck()
                    
                   println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latestJenkins)
-                  if((current && current >= latestJenkins) && (lastCheck && current >= lastCheck)) {
+                  if((current && current >= latestJenkins) || (lastCheck && lastCheck >= latestJenkins)) {
                      updateJenkins = false
                   }
                   writeFile(file: "jenkins.txt", text: latestJenkins)
 
-                  if(updateJenkins) {
-                     input message: "Woulkd you like to upgrde jenkins version?"
+                  if(!updateJenkins) {
+                     echo "Jenkins is up to date"
+                     currentBuild.result = 'SUCCESS'
+                     return
                   }
+                  input message: "Woulkd you like to upgrde jenkins version?"
                }
            }
        }
 
        stage('Update jenkins master') {
+          when {
+             expression {
+                updateJenkins
+             }
+          }
           steps {
             echo "Updating Jenkins to ${latestJenkins}"
-            sh 'sed -i.bak "s/FROM jenkins\\/jenkins.*/FROM jenkins\\/jenkins:${latestJenkins}-lts-alpine/g" Dockerfile'
+            sh """
+            sed -i.bak "s/FROM jenkins\\/jenkins.*/FROM jenkins\\/jenkins:${latestJenkins}-lts-alpine/g\" Dockerfile
+            """
           }
        }
    }

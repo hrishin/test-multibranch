@@ -1,4 +1,4 @@
-FROM jenkins/jenkins:2.235.1
+FROM jenkins/jenkins:2.225.1
 
 ENV VAULT_VERSION=1.2.3
 
