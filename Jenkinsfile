@@ -27,22 +27,30 @@ String getLastjenkinsCheck() {
 pipeline {
    agent any
    stages {
-       stage('check version') {
+       stage('Check updates') {
            steps {
                script {
-                  def current = currentJenkinsVersion()
-                  (latest, link, description) = lattestJenkinsVersion()
-                  def lastCheck = getLastjenkinsCheck()
+                  updateJenkins = true
+                  current = currentJenkinsVersion()
+                  (latestJenkins, link, description) = lattestJenkinsVersion()
+                  lastCheck = getLastjenkinsCheck()
                    
                   println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latest)
                   if((current && current >= latest) && (lastCheck && current >= lastCheck)) {
-                      echo "no update"
-                      return
+                     updateJenkins = false
                   }
                   writeFile(file: "jenkins.txt", text: latest)
-                  input message: "Woulkd you like to upgrde jenkins version?"
+
+                  if(updateJenkins) {
+                     input message: "Woulkd you like to upgrde jenkins version?"
+                  }
                }
            }
+       }
+
+       stage('Update jenkins master') {
+          echo "Updating Jenkins to ${latestJenkins}"
+          sh 'sed -i.bak "s/FROM jenkins\/jenkins.*/FROM jenkins\/jenkins:${latestJenkins}-lts-alpine/g" Dockerfile'
        }
    }
 }
