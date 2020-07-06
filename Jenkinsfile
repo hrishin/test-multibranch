@@ -37,14 +37,26 @@ def checkJenkinsUpdate() {
       
    println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latestJenkins)
    if((current && current >= latestJenkins) || (lastCheck && lastCheck >= latestJenkins)) {
-      return [updateJenkins, null]
+      return [updateJenkins, current, null]
    }
    writeFile(file: "jenkins.txt", text: latestJenkins)
    sh """
    sed -i.bak "s/FROM jenkins\\/jenkins.*/FROM jenkins\\/jenkins:${latestJenkins}-lts-alpine/g\" Dockerfile
    """
    updateJenkins = true
-   return [updateJenkins, jenkinsUpdateMessage(link, description)]
+   return [updateJenkins, latestJenkins, jenkinsUpdateMessage(link, description)]
+}
+
+def checkPluginUpdates(jenkinsVersion) {
+    echo "Checking plugin updates for the Jenkins ${jenkinsVersion}"
+    jenkinsVersion = jenkinsVersion.tokenize('.').dropRight(1).join('.')
+    def pluginUpdates = new URL("https://updates.jenkins.io/${jenkinsVersion}/update-center.actual.json").getText()
+    def pluginsMeta = readJSON text: pluginUpdates
+    
+    readFile('plugins.txt').split('\n').eachWithIndex { plugin, index ->
+        println plugin
+    }
+    return [null, null]
 }
 
 pipeline {
@@ -54,7 +66,9 @@ pipeline {
            steps {
                script {
                   // check jenkins update
-                  (updateJenkins, jenkinsReleaseNote) = checkJenkinsUpdate()
+                  (updateJenkins, jenkinsVersion, jenkinsReleaseNote) = checkJenkinsUpdate()
+                  // check plugin update
+                  (updatePlugins, pluginsReleaseNote) = checkPluginUpdates(jenkinsVersion)
                }
            }
        }
