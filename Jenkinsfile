@@ -32,7 +32,7 @@ pipeline {
                   def lastCheck = getLastjenkinsCheck()
                    
                   println sprintf("current: %s \n last: %s \n latest: %s\n", current, lastCheck, latest)
-                  if((current && current >= latest) && (lastCheck && current >= lastcheck)) {
+                  if((current && current >= latest) && (lastCheck && current >= lastCheck)) {
                       echo "no update"
                       return
                   }
