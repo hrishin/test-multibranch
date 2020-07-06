@@ -1,8 +1,11 @@
 @NonCPS
-String lattestJenkinsVersion() {
+def lattestJenkinsVersion() {
     def test = new XmlSlurper().parse("https://www.jenkins.io/changelog-stable/rss.xml")
-    def lts = test.channel.item[0].title.text()
-    return lts.split(" ")[1]
+    def data = test.channel.item[0]
+    def version = data.title.text().split(" ")[1]
+    def link = data.link.text().trim()
+    def description = data.description.text().trim().replaceAll("<(.|\n)*?>", '')
+    return [version, link, description]
 }
 
 String currentJenkinsVersion() {
@@ -28,10 +31,10 @@ pipeline {
            steps {
                script {
                   def current = currentJenkinsVersion()
-                  def latest  = lattestJenkinsVersion()
+                  (latest, link, description) = lattestJenkinsVersion()
                   def lastCheck = getLastjenkinsCheck()
                    
-                  println sprintf("current: %s \n last: %s \n latest: %s\n", current, lastCheck, latest)
+                  println sprintf("current: %s \nlast: %s \nlatest: %s\n", current, lastCheck, latest)
                   if((current && current >= latest) && (lastCheck && current >= lastCheck)) {
                       echo "no update"
                       return
