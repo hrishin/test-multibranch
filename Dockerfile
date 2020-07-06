@@ -1,1 +1,1 @@
-FROM jenkins/jenkins:2.225.1
+FROM jenkins/jenkins:2.235.1
