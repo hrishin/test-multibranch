@@ -50,7 +50,7 @@ pipeline {
 
        stage('Update jenkins master') {
           echo "Updating Jenkins to ${latestJenkins}"
-          sh 'sed -i.bak "s/FROM jenkins\/jenkins.*/FROM jenkins\/jenkins:${latestJenkins}-lts-alpine/g" Dockerfile'
+          sh 'sed -i.bak "s/FROM jenkins\\/jenkins.*/FROM jenkins\\/jenkins:${latestJenkins}-lts-alpine/g" Dockerfile'
        }
    }
 }
