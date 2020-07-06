@@ -26,11 +26,11 @@ pipeline {
                    def current = currentJenkinsVersion()
                    def latest  = lattestJenkinsVersion()
                    echo "c: "+ current + ", v: " + latest
-                   if(current && current >= version) {
+                   if(current && current >= latest) {
                        echo "no update"
                        return
                    }
-                   writeFile(file: "version4.txt", text: version)
+                   writeFile(file: "version4.txt", text: latest)
                    input message: "Woulkd you like to upgrde jenkins version?"
                }
            }
